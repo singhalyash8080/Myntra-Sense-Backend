@@ -19,6 +19,14 @@ const createItem = async (req, res) => {
 
     // console.log(req.body)
 
+    // require('path').resolve(__dirname, '..')
+
+    // creating public directory in the root folder if doesn't exists
+    if (!fs.existsSync(`${__dirname}/../../public/`)) {
+        fs.mkdirSync(`${__dirname}/../../public/`)
+        console.log('directory created')
+    }
+
     const filename = req.files.file.name
     const path = `${__dirname}/../../public/${filename}`
     const inputBuffer = req.files.file.data
@@ -34,7 +42,7 @@ const createItem = async (req, res) => {
             fit: sharp.fit.cover,
             position: sharp.strategy.entropy
         })
-    
+
     try {
         await sh.toFile(path);
     }

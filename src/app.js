@@ -3,17 +3,13 @@ const path = require('path')
 const cors = require('cors')
 const fileupload = require("express-fileupload");
 const app = express()
-const { base64encode, base64decode } = require('nodejs-base64')
- 
-app.use(fileupload());
 
-// setting path for env variables
 // require('dotenv').config({path:path.resolve(__dirname, '../config/dev.env') })
 require('dotenv').config({path:path.resolve(__dirname, '../config/prod.env') })
-
-const matchingRoutes = require('./routes/item')
-  
 require('./db/mongoose')
+const matchingRoutes = require('./routes/item')
+ 
+app.use(fileupload());
 
 // enabling cors
 app.use(cors())
