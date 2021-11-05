@@ -20,12 +20,12 @@ const createItem = async (req, res) => {
     // console.log(req.body)
 
     const filename = req.files.file.name
-    const path = `../public/${filename}`
+    const path = `${__dirname}/../../public/${filename}`
     const inputBuffer = req.files.file.data
 
     // console.log(filename)
     // console.log(path)
-    // console.log(req.files)
+    // console.log(req.files.file.data)
 
     const sh = sharp(inputBuffer)
         .resize({
@@ -34,8 +34,14 @@ const createItem = async (req, res) => {
             fit: sharp.fit.cover,
             position: sharp.strategy.entropy
         })
+    
+    try {
+        await sh.toFile(path);
+    }
+    catch (e) {
+        console.log(e)
+    }
 
-    await sh.toFile(path);
 
     const storage = await storageRef.upload(path, {
         public: true,
