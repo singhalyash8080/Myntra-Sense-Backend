@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid')
 const sharp = require('sharp')
 const fs = require('fs')
 const { base64encode, base64decode } = require('nodejs-base64')
+const namer = require('color-namer')
 const Item = require('../models/item')
 
 
@@ -76,7 +77,26 @@ const createItem = async (req, res) => {
 
 const findSimilarItems = async (req, res) => {
 
-    const items = await Item.find({})
+    // req.body will contain base64 code which will be sent to ML model for classifying image (should be a square image)
+
+    // API call to ML model
+
+    // response will contain 2 params - color and type
+
+    const identifiedColorName = 'rgb(0,0,255)'
+    const identifiedType = 'shirt'
+
+    const colorArr = namer(identifiedColorName, { pick: ['html'] }).html.filter((col) => col.distance <= 50.0)
+
+    let SimilarParamsArr = []
+
+    colorArr.forEach((color) => {
+        SimilarParamsArr.push({color: color.name})
+    })
+
+    SimilarParamsArr.push({category: identifiedType})
+    
+    const items = await Item.find({$or: SimilarParamsArr})
 
     let itemsArray = []
     items.forEach(item => itemsArray.push(item))
