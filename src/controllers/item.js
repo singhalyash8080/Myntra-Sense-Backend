@@ -1,10 +1,12 @@
-const admin = require("firebase-admin");
-const { v4: uuidv4 } = require('uuid');
-const sharp = require('sharp');
+const admin = require("firebase-admin")
+const { v4: uuidv4 } = require('uuid')
+const sharp = require('sharp')
 const fs = require('fs')
+const { base64encode, base64decode } = require('nodejs-base64')
 const Item = require('../models/item')
 
-const serviceAccount = require("../../firebaseServiceKey.json");
+
+const serviceAccount = JSON.parse(base64decode(process.env.FIREBASE_SERVICE_KEY))
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
