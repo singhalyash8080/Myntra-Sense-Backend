@@ -5,6 +5,8 @@ const fs = require('fs')
 const { base64encode, base64decode } = require('nodejs-base64')
 const namer = require('color-namer')
 const Item = require('../models/item')
+const Matching = require('../models/matching')
+
 
 
 const serviceAccount = JSON.parse(base64decode(process.env.FIREBASE_SERVICE_KEY))
@@ -86,17 +88,17 @@ const findSimilarItems = async (req, res) => {
     const identifiedColorName = 'rgb(0,0,255)'
     const identifiedType = 'shirt'
 
-    const colorArr = namer(identifiedColorName, { pick: ['html'] }).html.filter((col) => col.distance <= 50.0)
+    const colorArr = namer(identifiedColorName, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
 
     let SimilarParamsArr = []
 
     colorArr.forEach((color) => {
-        SimilarParamsArr.push({color: color.name})
+        SimilarParamsArr.push({ color: color.name })
     })
 
-    SimilarParamsArr.push({category: identifiedType})
-    
-    const items = await Item.find({$or: SimilarParamsArr})
+    SimilarParamsArr.push({ category: identifiedType })
+
+    const items = await Item.find({ $or: SimilarParamsArr })
 
     let itemsArray = []
     items.forEach(item => itemsArray.push(item))
@@ -106,12 +108,79 @@ const findSimilarItems = async (req, res) => {
 
 const findMatchedItems = async (req, res) => {
 
-    const items = await Item.find({})
+    const identifiedColorName = 'rgb(0,0,255)'
+    const identifiedType = 'shirt'
 
-    let itemsArray = []
-    items.forEach(item => itemsArray.push(item))
+    const colorArr = namer(identifiedColorName, { pick: ['html'] }).html.filter((col) => col.distance <= 30.0)
 
-    return res.send({ itemsArray: itemsArray })
+    let SimilarParamsArr = []
+
+    colorArr.forEach((color) => {
+        SimilarParamsArr.push({ color: color.name })
+    })
+
+    SimilarParamsArr.push({ category: identifiedType })
+
+    const items = await Item.find({ $or: SimilarParamsArr })
+
+    let itemsArray1 = []
+    let itemsArray2 = []
+
+    items.forEach(item => {
+        itemsArray1.push({ item1_id: item._id })
+        itemsArray2.push({ item2_id: item._id })
+    })
+
+    try {
+        const matchedItemsArray1 = await Matching.find({ $or: itemsArray1 }, { _id: 0, item1_id: 0 })
+        const matchedItemsArray2 = await Matching.find({ $or: itemsArray2 }, { _id: 0, item2_id: 0 })
+
+        // console.log(matchedItemsArray1)
+        // console.log(matchedItemsArray2)
+
+        let idsArray = []
+
+        matchedItemsArray1.forEach((item) => idsArray.push({ _id: item.item2_id }))
+        matchedItemsArray2.forEach((item) => idsArray.push({ _id: item.item1_id }))
+
+        const resultArray = await Item.find({ $or: idsArray })
+
+        return res.send(resultArray)
+    }
+    catch (e) {
+        console.log(e)
+        return res.send(e)
+    }
 }
 
-module.exports = { findSimilarItems, findMatchedItems, createItem }
+const createMatchingItems = async (req, res) => {
+
+    try {
+        const matchedItem = new Matching({
+            item1_id: req.body.item1_id,
+            item2_id: req.body.item2_id,
+        })
+        await matchedItem.save()
+
+        return res.status(201).send(matchedItem)
+
+    } catch (e) {
+        console.log(e)
+        return res.send(e)
+    }
+}
+
+const getMatchingItems = async (req, res) => {
+
+    try {
+
+        Matching.find({}).populate('item1_id').populate('item2_id').then((items) => res.send(items))
+
+    } catch (e) {
+
+        console.log(e)
+        return res.send(e)
+    }
+}
+
+module.exports = { findSimilarItems, findMatchedItems, createItem, createMatchingItems, getMatchingItems }
