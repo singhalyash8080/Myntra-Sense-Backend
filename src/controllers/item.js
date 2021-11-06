@@ -4,10 +4,9 @@ const sharp = require('sharp')
 const fs = require('fs')
 const { base64encode, base64decode } = require('nodejs-base64')
 const namer = require('color-namer')
+const axios = require('axios')
 const Item = require('../models/item')
 const Matching = require('../models/matching')
-
-
 
 const serviceAccount = JSON.parse(base64decode(process.env.FIREBASE_SERVICE_KEY))
 
@@ -70,7 +69,7 @@ const createItem = async (req, res) => {
             imageUrl: storage[0].metadata.mediaLink,
         });
         await item.save()
-        return res.status(201).send(item)
+        return res.status(201).send(item.data)
     } catch (e) {
         console.log(e)
         return res.send(e)
@@ -82,13 +81,36 @@ const findSimilarItems = async (req, res) => {
     // req.body will contain base64 code which will be sent to ML model for classifying image (should be a square image)
 
     // API call to ML model
+    axios.post('http://4fcd-34-125-195-80.ngrok.io/', {
+        "image": "https://img.teeherivar.com/200527AFD3240-1.jpg"
+    })
+    .then(async (response) => console.log(response.data))
+    .catch((e) => console.log(e))
+
 
     // response will contain 2 params - color and type
 
-    const identifiedColorName = 'rgb(0,0,255)'
-    const identifiedType = 'shirt'
+    const identifiedColorName1 = 'rgb(44,42,43)'
+    const identifiedColorName2 = 'rgb(72,79,97)'
+    const identifiedColorName3 = 'rgb(113,127,143)'
 
-    const colorArr = namer(identifiedColorName, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const identifiedType = 'Mens T-shirt'
+
+    let colorArr = []
+
+    const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+
+    results1.forEach((col) => colorArr.push(col))
+    results2.forEach((col) => colorArr.push(col))
+    results3.forEach((col) => colorArr.push(col))
+
+    colorArr = colorArr.filter((value, index, self) => {
+        return self.indexOf(value) === index;
+    })
+
+    // console.log(colorArr)
 
     let SimilarParamsArr = []
 
@@ -98,9 +120,9 @@ const findSimilarItems = async (req, res) => {
 
     SimilarParamsArr.push({ category: identifiedType })
 
-    const items = await Item.find({ $or: SimilarParamsArr })
-
+    const items = await Item.find({ $and: [{$or: SimilarParamsArr}, {category: identifiedType}] })
     let itemsArray = []
+
     items.forEach(item => itemsArray.push(item))
 
     return res.send({ itemsArray: itemsArray })
@@ -108,10 +130,27 @@ const findSimilarItems = async (req, res) => {
 
 const findMatchedItems = async (req, res) => {
 
-    const identifiedColorName = 'rgb(0,0,255)'
+    const identifiedColorName1 = 'rgb(0,0,255)'
+    const identifiedColorName2 = 'rgb(0,0,255)'
+    const identifiedColorName3 = 'rgb(0,0,255)'
+
     const identifiedType = 'shirt'
 
-    const colorArr = namer(identifiedColorName, { pick: ['html'] }).html.filter((col) => col.distance <= 30.0)
+    let colorArr = []
+
+    const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+
+    results1.forEach((col) => colorArr.push(col))
+    results2.forEach((col) => colorArr.push(col))
+    results3.forEach((col) => colorArr.push(col))
+
+    colorArr = colorArr.filter((value, index, self) => {
+        return self.indexOf(value) === index;
+    })
+
+    // console.log(colorArr)
 
     let SimilarParamsArr = []
 
@@ -119,9 +158,13 @@ const findMatchedItems = async (req, res) => {
         SimilarParamsArr.push({ color: color.name })
     })
 
-    SimilarParamsArr.push({ category: identifiedType })
+    // SimilarParamsArr.push({ category: identifiedType })
 
-    const items = await Item.find({ $or: SimilarParamsArr })
+    const items = await Item.find({ $and: [{$or: SimilarParamsArr}, {category: {$ne: identifiedType}}] })
+
+    let itemsArray = []
+
+    items.forEach(item => itemsArray.push(item))
 
     let itemsArray1 = []
     let itemsArray2 = []
