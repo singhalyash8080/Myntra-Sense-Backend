@@ -155,7 +155,7 @@ const findMatchedItems = async (req, res) => {
     let identifiedType = ''
 
     // API call to identify colors
-    await axios.post('http://cd6a-35-237-160-199.ngrok.io/', {
+    await axios.post('http://d36a-35-245-89-44.ngrok.io/', {
         "image": req.body.image
     })
         .then(async (response) => {
@@ -171,7 +171,7 @@ const findMatchedItems = async (req, res) => {
         .catch((e) => console.log(e))
 
     // API call to identify cloth category
-    await axios.post('http://836a-34-105-10-136.ngrok.io/', {
+    await axios.post('http://2d6e-34-86-11-180.ngrok.io/', {
         "image": req.body.image
     })
         .then(async (response) => {
