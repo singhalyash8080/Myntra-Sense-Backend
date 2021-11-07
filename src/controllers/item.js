@@ -69,7 +69,7 @@ const createItem = async (req, res) => {
             imageUrl: storage[0].metadata.mediaLink,
         });
         await item.save()
-        return res.status(201).send(item.data)
+        return res.status(201).send(item)
     } catch (e) {
         console.log(e)
         return res.send(e)
@@ -78,25 +78,44 @@ const createItem = async (req, res) => {
 
 const findSimilarItems = async (req, res) => {
 
-    // req.body will contain base64 code which will be sent to ML model for classifying image (should be a square image)
+    let identifiedColorName1 = ''
+    let identifiedColorName2 = ''
+    let identifiedColorName3 = ''
+    let identifiedType = ''
 
-    // API call to ML model
-    axios.post('http://4fcd-34-125-195-80.ngrok.io/', {
-        "image": "https://img.teeherivar.com/200527AFD3240-1.jpg"
+    // API call to identify colors
+    await axios.post('http://cd6a-35-237-160-199.ngrok.io/', {
+        "image": req.body.image
     })
-    .then(async (response) => console.log(response.data))
-    .catch((e) => console.log(e))
+        .then(async (response) => {
+            // console.log(response.data)
 
+            const rgbValues = response.data.rgb
 
-    // response will contain 2 params - color and type
+            identifiedColorName1 = `rgb(${rgbValues[0][0]},${rgbValues[0][1]},${rgbValues[0][2]})`
+            identifiedColorName2 = `rgb(${rgbValues[1][0]},${rgbValues[1][1]},${rgbValues[1][2]})`
+            identifiedColorName3 = `rgb(${rgbValues[2][0]},${rgbValues[2][1]},${rgbValues[2][2]})`
 
-    const identifiedColorName1 = 'rgb(44,42,43)'
-    const identifiedColorName2 = 'rgb(72,79,97)'
-    const identifiedColorName3 = 'rgb(113,127,143)'
+        })
+        .catch((e) => console.log(e))
 
-    const identifiedType = 'Mens T-shirt'
+    // API call to identify cloth category
+    await axios.post('http://836a-34-105-10-136.ngrok.io/', {
+        "image": req.body.image
+    })
+        .then(async (response) => {
+            // console.log(response.data)
+            identifiedType = response.data
+
+        })
+        .catch((e) => console.log(e))
 
     let colorArr = []
+
+    // console.log(identifiedColorName1)
+    // console.log(identifiedColorName2)
+    // console.log(identifiedColorName3)
+
 
     const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
     const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
@@ -120,7 +139,7 @@ const findSimilarItems = async (req, res) => {
 
     SimilarParamsArr.push({ category: identifiedType })
 
-    const items = await Item.find({ $and: [{$or: SimilarParamsArr}, {category: identifiedType}] })
+    const items = await Item.find({ $and: [{ $or: SimilarParamsArr }, { category: identifiedType }] })
     let itemsArray = []
 
     items.forEach(item => itemsArray.push(item))
@@ -130,13 +149,44 @@ const findSimilarItems = async (req, res) => {
 
 const findMatchedItems = async (req, res) => {
 
-    const identifiedColorName1 = 'rgb(0,0,255)'
-    const identifiedColorName2 = 'rgb(0,0,255)'
-    const identifiedColorName3 = 'rgb(0,0,255)'
+    let identifiedColorName1 = ''
+    let identifiedColorName2 = ''
+    let identifiedColorName3 = ''
+    let identifiedType = ''
 
-    const identifiedType = 'shirt'
+    // API call to identify colors
+    await axios.post('http://cd6a-35-237-160-199.ngrok.io/', {
+        "image": req.body.image
+    })
+        .then(async (response) => {
+            // console.log(response.data)
+
+            const rgbValues = response.data.rgb
+
+            identifiedColorName1 = `rgb(${rgbValues[0][0]},${rgbValues[0][1]},${rgbValues[0][2]})`
+            identifiedColorName2 = `rgb(${rgbValues[1][0]},${rgbValues[1][1]},${rgbValues[1][2]})`
+            identifiedColorName3 = `rgb(${rgbValues[2][0]},${rgbValues[2][1]},${rgbValues[2][2]})`
+
+        })
+        .catch((e) => console.log(e))
+
+    // API call to identify cloth category
+    await axios.post('http://836a-34-105-10-136.ngrok.io/', {
+        "image": req.body.image
+    })
+        .then(async (response) => {
+            // console.log(response.data)
+            identifiedType = response.data
+
+        })
+        .catch((e) => console.log(e))
 
     let colorArr = []
+
+    // console.log(identifiedColorName1)
+    // console.log(identifiedColorName2)
+    // console.log(identifiedColorName3)
+
 
     const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
     const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
@@ -158,9 +208,7 @@ const findMatchedItems = async (req, res) => {
         SimilarParamsArr.push({ color: color.name })
     })
 
-    // SimilarParamsArr.push({ category: identifiedType })
-
-    const items = await Item.find({ $and: [{$or: SimilarParamsArr}, {category: {$ne: identifiedType}}] })
+    const items = await Item.find({ $and: [{ $or: SimilarParamsArr }, { category: { $ne: identifiedType } }] })
 
     let itemsArray = []
 
