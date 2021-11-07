@@ -3,8 +3,10 @@ const { v4: uuidv4 } = require('uuid')
 const sharp = require('sharp')
 const fs = require('fs')
 const { base64encode, base64decode } = require('nodejs-base64')
+const namer = require('color-namer')
+const axios = require('axios')
 const Item = require('../models/item')
-
+const Matching = require('../models/matching')
 
 const serviceAccount = JSON.parse(base64decode(process.env.FIREBASE_SERVICE_KEY))
 
@@ -76,9 +78,70 @@ const createItem = async (req, res) => {
 
 const findSimilarItems = async (req, res) => {
 
-    const items = await Item.find({})
+    let identifiedColorName1 = ''
+    let identifiedColorName2 = ''
+    let identifiedColorName3 = ''
+    let identifiedType = ''
 
+    // API call to identify colors
+    await axios.post('http://cd6a-35-237-160-199.ngrok.io/', {
+        "image": req.body.image
+    })
+        .then(async (response) => {
+            // console.log(response.data)
+
+            const rgbValues = response.data.rgb
+
+            identifiedColorName1 = `rgb(${rgbValues[0][0]},${rgbValues[0][1]},${rgbValues[0][2]})`
+            identifiedColorName2 = `rgb(${rgbValues[1][0]},${rgbValues[1][1]},${rgbValues[1][2]})`
+            identifiedColorName3 = `rgb(${rgbValues[2][0]},${rgbValues[2][1]},${rgbValues[2][2]})`
+
+        })
+        .catch((e) => console.log(e))
+
+    // API call to identify cloth category
+    await axios.post('http://836a-34-105-10-136.ngrok.io/', {
+        "image": req.body.image
+    })
+        .then(async (response) => {
+            // console.log(response.data)
+            identifiedType = response.data
+
+        })
+        .catch((e) => console.log(e))
+
+    let colorArr = []
+
+    // console.log(identifiedColorName1)
+    // console.log(identifiedColorName2)
+    // console.log(identifiedColorName3)
+
+
+    const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+
+    results1.forEach((col) => colorArr.push(col))
+    results2.forEach((col) => colorArr.push(col))
+    results3.forEach((col) => colorArr.push(col))
+
+    colorArr = colorArr.filter((value, index, self) => {
+        return self.indexOf(value) === index;
+    })
+
+    // console.log(colorArr)
+
+    let SimilarParamsArr = []
+
+    colorArr.forEach((color) => {
+        SimilarParamsArr.push({ color: color.name })
+    })
+
+    SimilarParamsArr.push({ category: identifiedType })
+
+    const items = await Item.find({ $and: [{ $or: SimilarParamsArr }, { category: identifiedType }] })
     let itemsArray = []
+
     items.forEach(item => itemsArray.push(item))
 
     return res.send({ itemsArray: itemsArray })
@@ -86,12 +149,129 @@ const findSimilarItems = async (req, res) => {
 
 const findMatchedItems = async (req, res) => {
 
-    const items = await Item.find({})
+    let identifiedColorName1 = ''
+    let identifiedColorName2 = ''
+    let identifiedColorName3 = ''
+    let identifiedType = ''
+
+    // API call to identify colors
+    await axios.post('http://cd6a-35-237-160-199.ngrok.io/', {
+        "image": req.body.image
+    })
+        .then(async (response) => {
+            // console.log(response.data)
+
+            const rgbValues = response.data.rgb
+
+            identifiedColorName1 = `rgb(${rgbValues[0][0]},${rgbValues[0][1]},${rgbValues[0][2]})`
+            identifiedColorName2 = `rgb(${rgbValues[1][0]},${rgbValues[1][1]},${rgbValues[1][2]})`
+            identifiedColorName3 = `rgb(${rgbValues[2][0]},${rgbValues[2][1]},${rgbValues[2][2]})`
+
+        })
+        .catch((e) => console.log(e))
+
+    // API call to identify cloth category
+    await axios.post('http://836a-34-105-10-136.ngrok.io/', {
+        "image": req.body.image
+    })
+        .then(async (response) => {
+            // console.log(response.data)
+            identifiedType = response.data
+
+        })
+        .catch((e) => console.log(e))
+
+    let colorArr = []
+
+    // console.log(identifiedColorName1)
+    // console.log(identifiedColorName2)
+    // console.log(identifiedColorName3)
+
+
+    const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+
+    results1.forEach((col) => colorArr.push(col))
+    results2.forEach((col) => colorArr.push(col))
+    results3.forEach((col) => colorArr.push(col))
+
+    colorArr = colorArr.filter((value, index, self) => {
+        return self.indexOf(value) === index;
+    })
+
+    // console.log(colorArr)
+
+    let SimilarParamsArr = []
+
+    colorArr.forEach((color) => {
+        SimilarParamsArr.push({ color: color.name })
+    })
+
+    const items = await Item.find({ $and: [{ $or: SimilarParamsArr }, { category: { $ne: identifiedType } }] })
 
     let itemsArray = []
+
     items.forEach(item => itemsArray.push(item))
 
-    return res.send({ itemsArray: itemsArray })
+    let itemsArray1 = []
+    let itemsArray2 = []
+
+    items.forEach(item => {
+        itemsArray1.push({ item1_id: item._id })
+        itemsArray2.push({ item2_id: item._id })
+    })
+
+    try {
+        const matchedItemsArray1 = await Matching.find({ $or: itemsArray1 }, { _id: 0, item1_id: 0 })
+        const matchedItemsArray2 = await Matching.find({ $or: itemsArray2 }, { _id: 0, item2_id: 0 })
+
+        // console.log(matchedItemsArray1)
+        // console.log(matchedItemsArray2)
+
+        let idsArray = []
+
+        matchedItemsArray1.forEach((item) => idsArray.push({ _id: item.item2_id }))
+        matchedItemsArray2.forEach((item) => idsArray.push({ _id: item.item1_id }))
+
+        const resultArray = await Item.find({ $or: idsArray })
+
+        return res.send(resultArray)
+    }
+    catch (e) {
+        console.log(e)
+        return res.send(e)
+    }
 }
 
-module.exports = { findSimilarItems, findMatchedItems, createItem }
+const createMatchingItems = async (req, res) => {
+
+    try {
+        const matchedItem = new Matching({
+            item1_id: req.body.item1_id,
+            item2_id: req.body.item2_id,
+        })
+        await matchedItem.save()
+
+        return res.status(201).send(matchedItem)
+
+    } catch (e) {
+        console.log(e)
+        return res.send(e)
+    }
+}
+
+const getMatchingItems = async (req, res) => {
+
+    try {
+
+        Matching.find({}).populate('item1_id').populate('item2_id').then((items) => res.send(items))
+
+    } catch (e) {
+
+        console.log(e)
+        return res.send(e)
+    }
+}
+
+module.exports = { findSimilarItems, findMatchedItems, createItem, createMatchingItems, getMatchingItems }
