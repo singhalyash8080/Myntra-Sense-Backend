@@ -82,7 +82,7 @@ const findSimilarItems = async (req, res) => {
         let identifiedType = ''
 
         // API call to identify colors
-        await axios.post('http://6209-104-199-188-87.ngrok.io/', {
+        await axios.post('http://67d2-104-199-188-87.ngrok.io/', {
             "image": req.body.image
         })
             .then(async (response) => {
@@ -115,13 +115,13 @@ const findSimilarItems = async (req, res) => {
         // console.log(identifiedColorName3)
 
 
-        const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 26.0)
-        const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 26.0)
-        const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 26.0)
+        const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+        const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+        const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
 
-        console.log(results1)
-        console.log(results2)
-        console.log(results3)
+        // console.log(results1)
+        // console.log(results2)
+        // console.log(results3)
 
         results1.forEach((col) => colorArr.push(col))
         results2.forEach((col) => colorArr.push(col))
@@ -164,7 +164,7 @@ const findMatchedItems = async (req, res) => {
         let identifiedType = ''
 
         // API call to identify colors
-        await axios.post('http://6209-104-199-188-87.ngrok.io/', {
+        await axios.post('http://67d2-104-199-188-87.ngrok.io/', {
             "image": req.body.image
         })
             .then(async (response) => {
@@ -197,9 +197,9 @@ const findMatchedItems = async (req, res) => {
         // console.log(identifiedColorName3)
 
 
-        const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 20.0)
-        const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 20.0)
-        const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 20.0)
+        const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+        const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+        const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
 
         results1.forEach((col) => colorArr.push(col))
         results2.forEach((col) => colorArr.push(col))
@@ -217,7 +217,11 @@ const findMatchedItems = async (req, res) => {
             SimilarParamsArr.push({ color: color.name })
         })
 
-        const items = await Item.find({ $and: [{ $or: SimilarParamsArr }, { category: { $ne: identifiedType } }] })
+        console.log(identifiedType)
+
+        const items = await Item.find({ $and: [{ $or: SimilarParamsArr }, { category: identifiedType }] })
+
+        // console.log(items)
 
         let itemsArray = []
 
