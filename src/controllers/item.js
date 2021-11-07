@@ -82,7 +82,7 @@ const findSimilarItems = async (req, res) => {
         let identifiedType = ''
 
         // API call to identify colors
-        await axios.post('http://67d2-104-199-188-87.ngrok.io/', {
+        await axios.post('http://6b0e-104-199-188-87.ngrok.io/', {
             "image": req.body.image
         })
             .then(async (response) => {
@@ -98,7 +98,7 @@ const findSimilarItems = async (req, res) => {
             .catch((e) => console.log(e))
 
         // API call to identify cloth category
-        await axios.post('http://d3ac-34-90-29-63.ngrok.io/', {
+        await axios.post('http://6300-34-90-29-63.ngrok.io/', {
             "image": req.body.image
         })
             .then(async (response) => {
@@ -164,7 +164,7 @@ const findMatchedItems = async (req, res) => {
         let identifiedType = ''
 
         // API call to identify colors
-        await axios.post('http://67d2-104-199-188-87.ngrok.io/', {
+        await axios.post('http://6b0e-104-199-188-87.ngrok.io/', {
             "image": req.body.image
         })
             .then(async (response) => {
@@ -180,7 +180,7 @@ const findMatchedItems = async (req, res) => {
             .catch((e) => console.log(e))
 
         // API call to identify cloth category
-        await axios.post('http://d3ac-34-90-29-63.ngrok.io/', {
+        await axios.post('http://6300-34-90-29-63.ngrok.io/', {
             "image": req.body.image
         })
             .then(async (response) => {
@@ -217,7 +217,7 @@ const findMatchedItems = async (req, res) => {
             SimilarParamsArr.push({ color: color.name })
         })
 
-        console.log(identifiedType)
+        // console.log(identifiedType)
 
         const items = await Item.find({ $and: [{ $or: SimilarParamsArr }, { category: identifiedType }] })
 
