@@ -249,7 +249,7 @@ const findMatchedItems = async (req, res) => {
 
         const resultArray = await Item.find({ $or: idsArray })
 
-        return res.send(resultArray)
+        return res.send({ itemsArray: resultArray })
     }
     catch (e) {
         console.log(e)
