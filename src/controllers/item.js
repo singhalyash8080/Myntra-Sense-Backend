@@ -117,9 +117,9 @@ const findSimilarItems = async (req, res) => {
     // console.log(identifiedColorName3)
 
 
-    const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
-    const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
-    const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 30.0)
+    const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 30.0)
+    const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 30.0)
 
     results1.forEach((col) => colorArr.push(col))
     results2.forEach((col) => colorArr.push(col))
@@ -188,9 +188,9 @@ const findMatchedItems = async (req, res) => {
     // console.log(identifiedColorName3)
 
 
-    const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
-    const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
-    const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 55.0)
+    const results1 = namer(identifiedColorName1, { pick: ['html'] }).html.filter((col) => col.distance <= 25.0)
+    const results2 = namer(identifiedColorName2, { pick: ['html'] }).html.filter((col) => col.distance <= 25.0)
+    const results3 = namer(identifiedColorName3, { pick: ['html'] }).html.filter((col) => col.distance <= 25.0)
 
     results1.forEach((col) => colorArr.push(col))
     results2.forEach((col) => colorArr.push(col))
